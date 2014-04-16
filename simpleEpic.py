@@ -1,6 +1,7 @@
 import flask
 from flask import Flask
 from flask import request
+from flask import url_for
 
 import json
 
@@ -10,7 +11,7 @@ pids = dict()
 
 
 def extract_prefix(pid):
-    return pid.split('/', 1)[0]+'/'
+    return pid.split('/', 1)[0] + '/'
 
 
 def extract_suffix(pid):
@@ -47,10 +48,12 @@ def get_pid(prefix, suffix):
 
     return 'Not found', 404
 
+
 @app.route('/<prefix>/<suffix>', methods=['PUT'])
 def add_pid(prefix, suffix):
     pids[('%s/%s' % (prefix, suffix))] = request.data
-    return 'You updated pid %s // %s' % (prefix, suffix)
+    return ('You updated pid %s // %s' % (prefix, suffix)), 201, {
+        'Location': url_for('get_pid', prefix=prefix, suffix=suffix)}
 
 
 @app.before_first_request
@@ -58,6 +61,7 @@ def populate_pids():
     pids['8444/21211'] = "{'key':'value', 'key2':'value2'}"
     pids['85411/dasa'] = "{'ada':'daa', 'foo':'bar'}"
     pids['85444/foobar'] = "{'key1':'value1', 'key2':'value2'}"
+
 
 if __name__ == '__main__':
     app.run(debug=True)
