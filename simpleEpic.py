@@ -51,6 +51,7 @@ def get_pid(prefix, suffix):
 
 @app.route('/<prefix>/<suffix>', methods=['PUT'])
 def add_pid(prefix, suffix):
+    app.logger.debug('Uploaded data: %s\n' % request.data)
     pids[('%s/%s' % (prefix, suffix))] = request.data
     return ('You updated pid %s // %s' % (prefix, suffix)), 201, {
         'Location': url_for('get_pid', prefix=prefix, suffix=suffix)}
