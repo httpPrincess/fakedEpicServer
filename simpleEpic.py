@@ -98,4 +98,4 @@ def populate_pids():
             pids['%s/%s' % (prefix, suffix)] = convert_to_handle(location=location, checksum=checksum)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', debug=True)
