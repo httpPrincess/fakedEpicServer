@@ -56,6 +56,14 @@ def add_pid(prefix, suffix):
     return ('You updated pid %s // %s' % (prefix, suffix)), 201, {
         'Location': url_for('get_pid', prefix=prefix, suffix=suffix)}
 
+@app.route('/<prefix>/<suffix>', methods=['DELETE'])
+def delete_pid(prefix, suffix):
+    app.logger.debug('Delete pid: %s/%s\n' % (prefix, suffix))
+    delete_pid = pids.pop(('%s/%s' % (prefix, suffix)), False)
+    if not delete_pid:
+        return 'Not found', 404
+    else:
+        return ('You deleted pid %s/%s' % (prefix, suffix)), 204
 
 def generate_suffix():
     return str(uuid.uuid1())
