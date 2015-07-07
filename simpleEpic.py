@@ -1,10 +1,7 @@
-import flask
-from flask import Flask
-from flask import request
-from flask import url_for
-from random import randint
-
+from itertools import repeat
+from flask import Flask, request, url_for
 import json
+from random import randint
 import uuid
 
 app = Flask(__name__)
@@ -20,30 +17,31 @@ def extract_suffix(pid):
     return pid.split('/', 1)[1]
 
 
-def get_prefixes(pids):
-    return list(set(map(extract_prefix, pids)))
+def get_prefixes(pids_dictionary):
+    return list(set(map(extract_prefix, pids_dictionary)))
 
 
-def get_suffixes(pids, prefix):
-    return {extract_suffix(k) for k, v in pids.iteritems() if k.startswith(prefix)}
+def get_suffixes(pids_dictionary, prefix):
+    return {extract_suffix(k) for k, v in pids_dictionary.iteritems() if
+            k.startswith(prefix)}
 
 
 @app.route('/', methods=['GET'])
 def get_prefix_list():
-    #dengerous but epic does it like that
+    # dengerous but epic does it like that
     return json.dumps(get_prefixes(pids))
 
 
 @app.route('/<prefix>/', methods=['GET'])
 def get_pids(prefix):
-    return json.dumps(list(get_suffixes(pids=pids, prefix=prefix)))
+    return json.dumps(list(get_suffixes(pids_dictionary=pids, prefix=prefix)))
 
 
 @app.route('/<prefix>/<suffix>', methods=['GET'])
 def get_pid(prefix, suffix):
     pid = '%s/%s' % (prefix, suffix)
     if pids.has_key(pid):
-        #it should be json already
+        # it should be json already
         return pids[pid]
 
     return 'Not found', 404
@@ -56,14 +54,16 @@ def add_pid(prefix, suffix):
     return ('You updated pid %s // %s' % (prefix, suffix)), 201, {
         'Location': url_for('get_pid', prefix=prefix, suffix=suffix)}
 
+
 @app.route('/<prefix>/<suffix>', methods=['DELETE'])
 def delete_pid(prefix, suffix):
     app.logger.debug('Delete pid: %s/%s\n' % (prefix, suffix))
-    delete_pid = pids.pop(('%s/%s' % (prefix, suffix)), False)
-    if not delete_pid:
+    deleted_pid = pids.pop(('%s/%s' % (prefix, suffix)), False)
+    if not deleted_pid:
         return 'Not found', 404
     else:
         return ('You deleted pid %s/%s' % (prefix, suffix)), 204
+
 
 def generate_suffix():
     return str(uuid.uuid1())
@@ -85,12 +85,12 @@ def create_pid(prefix):
 def convert_to_handle(location, checksum):
     if checksum:
         new_handle_json = json.dumps([{'type': 'URL',
-                                             'parsed_data': location},
-                                            {'type': 'CHECKSUM',
-                                             'parsed_data': str(checksum)}])
+                                       'parsed_data': location},
+                                      {'type': 'CHECKSUM',
+                                       'parsed_data': str(checksum)}])
     else:
         new_handle_json = json.dumps([{'type': 'URL',
-                                             'parsed_data': location}])
+                                       'parsed_data': location}])
     return new_handle_json
 
 
@@ -99,11 +99,13 @@ def populate_pids():
     prefixes = ['8441', '90210', '44']
     location_string = 'irods://zone:1247/home/eudat/'
     for prefix in prefixes:
-        for i in range(1, randint(5, 10)):
+        for _ in repeat(None, randint(5, 10)):
             suffix = generate_suffix()
             location = '%s/%s' % (location_string, suffix)
             checksum = str(uuid.uuid1())
-            pids['%s/%s' % (prefix, suffix)] = convert_to_handle(location=location, checksum=checksum)
+            pids['%s/%s' % (prefix, suffix)] = convert_to_handle(
+                location=location, checksum=checksum)
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True)
