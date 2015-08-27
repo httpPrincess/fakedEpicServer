@@ -21,9 +21,8 @@ def get_prefixes(pids_dictionary):
     return list(set(map(extract_prefix, pids_dictionary)))
 
 
-def get_suffixes(pids_dictionary, prefix):
-    return {extract_suffix(k) for k, v in pids_dictionary.iteritems() if
-            k.startswith(prefix)}
+def get_suffixes(pids, prefix):
+    return {extract_suffix(k) for k, v in list(pids.items()) if k.startswith(prefix)}
 
 
 @app.route('/', methods=['GET'])
@@ -40,8 +39,8 @@ def get_pids(prefix):
 @app.route('/<prefix>/<suffix>', methods=['GET'])
 def get_pid(prefix, suffix):
     pid = '%s/%s' % (prefix, suffix)
-    if pids.has_key(pid):
-        # it should be json already
+    if pid in pids:
+        #it should be json already
         return pids[pid]
 
     return 'Not found', 404
@@ -75,7 +74,7 @@ def create_pid(prefix):
     while condition:
         suffix = generate_suffix()
         pid = '%s/%s' % (prefix, suffix)
-        condition = pids.has_key(pid)
+        condition = pid in pids
 
     pids[pid] = request.data
     return ('You updated pid %s\nValue:%s\n' % (pid, request.data)), 201, {
